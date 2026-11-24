@@ -16,9 +16,18 @@
 ##
 ##  examples/linux-app/_outputs.tf
 ##
-##  Outputs of the example.
+##  Outputs of the example. The name output asserts the name the example builds.
 ## ----------------------------------------------------------------------------
 
 output "linux_function_apps" {
   value = module.function_app.linux_function_apps
+}
+
+output "name" {
+  value = module.function_app.linux_function_apps["api"].name
+
+  precondition {
+    condition     = module.function_app.linux_function_apps["api"].name == "fa-rg-function-app-api"
+    error_message = "The app must be named fa-rg-function-app-api: the fa attribute first, then the namespace, the project and the app key."
+  }
 }

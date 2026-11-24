@@ -60,6 +60,10 @@ module "function_app" {
   source  = "../../"
   context = module.context.self
 
+  # The module adds no attributes of its own. This example passes "func" to keep the names the
+  # previous version generated (<context>-<app key>-func).
+  attributes = ["func"]
+
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 

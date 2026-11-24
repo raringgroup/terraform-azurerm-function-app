@@ -39,6 +39,7 @@ variable "linux_function_apps" {
     content_share_force_disabled                   = optional(bool)
     daily_memory_time_quota                        = optional(number)
     enabled                                        = optional(bool)
+    name                                           = optional(string)
     ftp_publish_basic_authentication_enabled       = optional(bool)
     functions_extension_version                    = optional(string)
     https_only                                     = optional(bool)
@@ -299,7 +300,7 @@ variable "linux_function_apps" {
       update = optional(string)
     }))
   }))
-  description = "Map of azurerm_linux_function_app resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app); name, tags, resource_group_name and location come from the module. Pass {} for none."
+  description = "Map of azurerm_linux_function_app resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app); tags, resource_group_name and location come from the module, and the name is generated from the context and the map key unless you set the optional name attribute to use a fixed name instead. Pass {} for none."
 }
 
 variable "windows_function_apps" {
@@ -312,6 +313,7 @@ variable "windows_function_apps" {
     content_share_force_disabled                   = optional(bool)
     daily_memory_time_quota                        = optional(number)
     enabled                                        = optional(bool)
+    name                                           = optional(string)
     ftp_publish_basic_authentication_enabled       = optional(bool)
     functions_extension_version                    = optional(string)
     https_only                                     = optional(bool)
@@ -562,7 +564,7 @@ variable "windows_function_apps" {
       update = optional(string)
     }))
   }))
-  description = "Map of azurerm_windows_function_app resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_function_app); name, tags, resource_group_name and location come from the module. Pass {} for none."
+  description = "Map of azurerm_windows_function_app resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_function_app); tags, resource_group_name and location come from the module, and the name is generated from the context and the map key unless you set the optional name attribute to use a fixed name instead. Pass {} for none."
 }
 
 variable "flex_consumption_function_apps" {
@@ -572,6 +574,7 @@ variable "flex_consumption_function_apps" {
     client_certificate_exclusion_paths             = optional(string)
     client_certificate_mode                        = optional(string)
     enabled                                        = optional(bool)
+    name                                           = optional(string)
     http_concurrency                               = optional(number)
     https_only                                     = optional(bool)
     instance_memory_in_mb                          = optional(number)
@@ -796,7 +799,7 @@ variable "flex_consumption_function_apps" {
       update = optional(string)
     }))
   }))
-  description = "Map of azurerm_function_app_flex_consumption resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/function_app_flex_consumption); name, tags, resource_group_name and location come from the module. Pass {} for none."
+  description = "Map of azurerm_function_app_flex_consumption resources to create, keyed by a short name. For the function app kinds the key becomes the name label of the generated name; for the other kinds it is the resource name where the resource has one. Each value takes the arguments of the resource (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/function_app_flex_consumption); tags, resource_group_name and location come from the module, and the name is generated from the context and the map key unless you set the optional name attribute to use a fixed name instead. Pass {} for none."
 }
 
 variable "linux_function_app_slots" {

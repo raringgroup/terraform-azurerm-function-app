@@ -54,6 +54,12 @@ module "function_app" {
   source  = "../../"
   context = module.context.self
 
+  # The module adds no attributes of its own: the caller passes them and label_order decides where
+  # they go. The app key (api) is the name label, so the app is named fa-<namespace>-<project>-api,
+  # for example fa-rg-function-app-api. The _outputs.tf file asserts that name.
+  attributes  = ["fa"]
+  label_order = ["attributes", "namespace", "project", "name"]
+
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
