@@ -24,6 +24,7 @@ output "linux_function_apps" {
   value = {
     for k, v in azurerm_linux_function_app.this : k => {
       id                                = v.id
+      name                              = v.name
       default_hostname                  = v.default_hostname
       hosting_environment_id            = v.hosting_environment_id
       kind                              = v.kind
@@ -41,6 +42,7 @@ output "windows_function_apps" {
   value = {
     for k, v in azurerm_windows_function_app.this : k => {
       id                                = v.id
+      name                              = v.name
       default_hostname                  = v.default_hostname
       hosting_environment_id            = v.hosting_environment_id
       kind                              = v.kind
@@ -58,6 +60,7 @@ output "flex_consumption_function_apps" {
   value = {
     for k, v in azurerm_function_app_flex_consumption.this : k => {
       id                                = v.id
+      name                              = v.name
       default_hostname                  = v.default_hostname
       hosting_environment_id            = v.hosting_environment_id
       kind                              = v.kind

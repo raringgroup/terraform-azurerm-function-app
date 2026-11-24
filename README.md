@@ -42,7 +42,9 @@ The module takes these as inputs and does not create them:
 
 ## Naming
 
-An app is named by `null-context` from the context inputs, the map key as the `name` label, and the type token `func`. For `namespace = "upsis"`, `environment = "dev"` and the key `api`, the name is `upsis-dev-api-func`. The `name` input of the context is ignored for apps, because the key takes its place. Function app names are 2 to 60 characters: letters, digits and hyphens, and can't start or end with a hyphen. The name is also the default hostname (`<name>.azurewebsites.net`), so it must be globally unique. A key must not appear in more than one app map.
+The module adds no labels or attributes of its own. An app is named by `null-context` from the context inputs the caller passes (`namespace`, `environment`, `stage`, `project`, `attributes`, ...), joined in the order of `label_order`, with the map key as the `name` label. For `namespace = "upsis"`, `environment = "dev"` and the key `api`, the name is `upsis-dev-api`. Callers add a prefix or suffix through `attributes` and `label_order`: with `project = "ehs-sync"`, `attributes = ["fa"]` and `label_order = ["attributes", "namespace", "environment", "project", "name"]`, the key `api` gives `fa-upsis-dev-ehs-sync-api`. The `name` input of the context is ignored for apps, because the key takes its place. Function app names are 2 to 60 characters: letters, digits and hyphens, and can't start or end with a hyphen. The name is also the default hostname (`<name>.azurewebsites.net`), so it must be globally unique. A key must not appear in more than one app map.
+
+Any app (Linux, Windows or Flex Consumption) can set the optional `name` attribute to use a fixed name instead of the generated one. When `name` is `null` or empty, the generated name applies, so existing callers see no change. The tags always come from the context, so the `Name` tag keeps the generated name even when `name` is set. Changing an app's name replaces the app, so choose it once.
 
 Slots, functions and connections use the map key as their own name. Slot names are 2 to 59 characters: letters, digits and hyphens.
 
@@ -69,11 +71,11 @@ All inputs are required (no defaults): pass `{}` for a map you do not need. Cont
 | `function_app_hybrid_connections` | `map(object)` | Map of `azurerm_function_app_hybrid_connection`. |
 | `static_web_app_function_app_registrations` | `map(object)` | Map of `azurerm_static_web_app_function_app_registration`. |
 
-Each map value is a typed object whose attributes follow the azurerm documentation for that resource (linked above). `name`, `tags`, `resource_group_name` and `location` are not attributes of the objects, because the module supplies them. Deprecated azurerm arguments are not exposed. Attributes the resource treats as optional may be omitted. Secrets such as `storage_account_access_key` and connection string values are marked sensitive by the provider, so they are masked in plan output; prefer Key Vault references in `app_settings`.
+Each map value is a typed object whose attributes follow the azurerm documentation for that resource (linked above). `tags`, `resource_group_name` and `location` are not attributes of the objects, because the module supplies them, and neither is `name`, except on the three app kinds (Linux, Windows and Flex Consumption), where it is optional (see Naming). Deprecated azurerm arguments are not exposed. Attributes the resource treats as optional may be omitted. Secrets such as `storage_account_access_key` and connection string values are marked sensitive by the provider, so they are masked in plan output; prefer Key Vault references in `app_settings`.
 
 ## Outputs
 
-Each output is a map keyed like the matching input, holding the computed attributes of every instance (`id`, `default_hostname`, `identity`, ...). Site credentials and keys are deliberately not output.
+Each output is a map keyed like the matching input, holding the computed attributes of every instance (`id`, `default_hostname`, `identity`, ...). The three app outputs (`linux_function_apps`, `windows_function_apps` and `flex_consumption_function_apps`) also include `name`, the final app name. Site credentials and keys are deliberately not output.
 
 | Name | Description |
 |------|-------------|
@@ -88,11 +90,21 @@ Each output is a map keyed like the matching input, holding the computed attribu
 | `function_app_hybrid_connections` | Attributes of each `azurerm_function_app_hybrid_connection`, keyed like the input. |
 | `static_web_app_function_app_registrations` | Attributes of each `azurerm_static_web_app_function_app_registration`, keyed like the input. |
 
+## Upgrading from v0.1.0 (breaking change)
+
+Version v0.1.0 added the attribute `func` to every generated app name (for example `upsis-dev-api-func`). From v0.1.1 the module adds no attributes, so generated names no longer contain `func`.
+
+**Effect.** A caller that relies on the generated name will see every Linux, Windows and Flex Consumption app renamed. Changing the name of a function app forces a new resource, so Terraform replaces the app (destroy and create): its default hostname changes, and the slots, functions and connections that point at it are replaced with it. Read the plan before applying.
+
+**Keeping the old names.** Pass `func` as the last attribute, for example `attributes = ["func"]` (v0.1.0 appended `func` after the caller attributes, so this reproduces `<context>-<key>-func` for the same `label_order`), or set the optional `name` on an app to its current name.
+
+**Tags.** Tags still come from each app inner context. Without attributes the `Attributes` tag is no longer set on the apps; with `attributes = ["func"]` it stays `func`.
+
 ## Usage
 
 ```hcl
 terraform {
-  source = "git::https://github.com/raringgroup/terraform-azurerm-function-app.git?ref=develop"
+  source = "git::https://github.com/raringgroup/terraform-azurerm-function-app.git?ref=v0.1.1"
 }
 
 inputs = {
@@ -141,12 +153,12 @@ inputs = {
 
 ## Examples
 
-Each example is self-contained: it creates its own resource group, storage account and service plan, then calls the module with `source = "../../"`. Each has a `terragrunt.hcl` that generates the provider and backend.
+Each example is self-contained: it creates its own resource group, storage account and service plan, then calls the module with `source = "../../"`. Each has a `terragrunt.hcl` that generates the provider and backend. The `complete`, `windows-slots` and `flex-consumption` examples pass `attributes = ["func"]` to keep the names the previous version generated; `linux-app` passes `attributes = ["fa"]` to show a name the caller builds.
 
 | Example | Scenario |
 |---------|----------|
 | [`complete`](examples/complete) | One Linux app with a slot, one Windows app and one Flex Consumption app together. |
-| [`linux-app`](examples/linux-app) | A Linux function app on the Consumption plan (Y1) with a system-assigned managed identity, app settings and CORS. |
+| [`linux-app`](examples/linux-app) | A Linux function app on the Consumption plan (Y1) with a system-assigned managed identity, app settings and CORS. It passes `attributes = ["fa"]` with a `label_order` that puts it first, so the app is named `fa-<namespace>-<project>-api`, and its outputs assert that name. |
 | [`windows-slots`](examples/windows-slots) | A Windows function app on Elastic Premium (EP1) with a staging slot and an active-slot swap. Slots need a plan that supports them, so Consumption cannot be used. |
 | [`flex-consumption`](examples/flex-consumption) | A Flex Consumption app (FC1) with always-ready instances, a deployment container and a managed identity. |
 | [`existing-function-app`](examples/existing-function-app) | Adds a slot and a function to a function app that already exists, referring to it by `function_app_id` instead of by key. |

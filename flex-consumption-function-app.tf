@@ -26,8 +26,7 @@ module "flex_consumption_function_app_context" {
   source  = "git::https://github.com/raringgroup/terraform-null-context.git?ref=v0.1.0"
   context = module.context.self
 
-  attributes = ["func"]
-  name       = each.key
+  name = each.key
 }
 
 
@@ -35,7 +34,7 @@ module "flex_consumption_function_app_context" {
 resource "azurerm_function_app_flex_consumption" "this" {
   for_each = module.context.enabled ? var.flex_consumption_function_apps : {}
 
-  name                                           = module.flex_consumption_function_app_context[each.key].id
+  name                                           = coalesce(each.value.name, module.flex_consumption_function_app_context[each.key].id)
   tags                                           = module.flex_consumption_function_app_context[each.key].tags
   resource_group_name                            = var.resource_group_name
   location                                       = var.location
