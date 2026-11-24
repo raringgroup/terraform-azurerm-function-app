@@ -14,7 +14,7 @@ mock_provider "azurerm" {
 }
 
 variables {
-  namespace   = "upsis"
+  namespace   = "example"
   environment = "dev"
   name        = "ignored"
 
@@ -99,7 +99,7 @@ run "names_and_cross_references" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this["api"].name == "upsis-dev-api" && azurerm_windows_function_app.this["winapi"].name == "upsis-dev-winapi" && azurerm_function_app_flex_consumption.this["flexapi"].name == "upsis-dev-flexapi"
+    condition     = azurerm_linux_function_app.this["api"].name == "example-dev-api" && azurerm_windows_function_app.this["winapi"].name == "example-dev-winapi" && azurerm_function_app_flex_consumption.this["flexapi"].name == "example-dev-flexapi"
     error_message = "each app kind must be named from the context and its map key, with no attribute added by the module"
   }
   assert {
@@ -238,11 +238,11 @@ run "flex_app_name_can_be_fixed_and_tags_stay_generated" {
   }
 
   assert {
-    condition     = azurerm_function_app_flex_consumption.this["fixed"].name == "fixed-flex-app" && azurerm_function_app_flex_consumption.this["plain"].name == "upsis-dev-plain"
+    condition     = azurerm_function_app_flex_consumption.this["fixed"].name == "fixed-flex-app" && azurerm_function_app_flex_consumption.this["plain"].name == "example-dev-plain"
     error_message = "name must be used as given when set, and generated from the context and key when not set"
   }
   assert {
-    condition     = jsonencode(azurerm_function_app_flex_consumption.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "upsis-dev-fixed", Namespace = "upsis" })
+    condition     = jsonencode(azurerm_function_app_flex_consumption.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "example-dev-fixed", Namespace = "example" })
     error_message = "tags must still come from the context, so the Name tag keeps the generated name"
   }
   assert {
@@ -271,7 +271,7 @@ run "flex_app_empty_name_falls_back_to_the_generated_name" {
   }
 
   assert {
-    condition     = azurerm_function_app_flex_consumption.this["events"].name == "upsis-dev-events"
+    condition     = azurerm_function_app_flex_consumption.this["events"].name == "example-dev-events"
     error_message = "an empty name must fall back to the generated name"
   }
 }
@@ -313,15 +313,15 @@ run "linux_and_windows_app_names_can_be_fixed_and_tags_stay_generated" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this["fixed"].name == "fixed-linux-app" && azurerm_linux_function_app.this["plain"].name == "upsis-dev-plain"
+    condition     = azurerm_linux_function_app.this["fixed"].name == "fixed-linux-app" && azurerm_linux_function_app.this["plain"].name == "example-dev-plain"
     error_message = "a Linux app must use name when set and the generated name when not"
   }
   assert {
-    condition     = azurerm_windows_function_app.this["fixed"].name == "fixed-windows-app" && azurerm_windows_function_app.this["plain"].name == "upsis-dev-plain"
+    condition     = azurerm_windows_function_app.this["fixed"].name == "fixed-windows-app" && azurerm_windows_function_app.this["plain"].name == "example-dev-plain"
     error_message = "a Windows app must use name when set and the generated name when not"
   }
   assert {
-    condition     = jsonencode(azurerm_linux_function_app.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "upsis-dev-fixed", Namespace = "upsis" }) && jsonencode(azurerm_windows_function_app.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "upsis-dev-fixed", Namespace = "upsis" })
+    condition     = jsonencode(azurerm_linux_function_app.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "example-dev-fixed", Namespace = "example" }) && jsonencode(azurerm_windows_function_app.this["fixed"].tags) == jsonencode({ Environment = "dev", Name = "example-dev-fixed", Namespace = "example" })
     error_message = "tags must still come from the context, so the Name tag keeps the generated name"
   }
 }
@@ -330,7 +330,7 @@ run "callers_control_the_whole_name_with_attributes" {
   command = plan
 
   variables {
-    project     = "ehs-sync"
+    project     = "demo-sync"
     label_order = ["attributes", "namespace", "environment", "project", "name"]
     attributes  = ["fa"]
     linux_function_apps = {
@@ -364,11 +364,11 @@ run "callers_control_the_whole_name_with_attributes" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this["api"].name == "fa-upsis-dev-ehs-sync-api" && azurerm_windows_function_app.this["winapi"].name == "fa-upsis-dev-ehs-sync-winapi" && azurerm_function_app_flex_consumption.this["flexapi"].name == "fa-upsis-dev-ehs-sync-flexapi"
+    condition     = azurerm_linux_function_app.this["api"].name == "fa-example-dev-demo-sync-api" && azurerm_windows_function_app.this["winapi"].name == "fa-example-dev-demo-sync-winapi" && azurerm_function_app_flex_consumption.this["flexapi"].name == "fa-example-dev-demo-sync-flexapi"
     error_message = "the name must follow label_order and the attributes the caller passes, with the app key as the name label"
   }
   assert {
-    condition     = output.linux_function_apps["api"].name == "fa-upsis-dev-ehs-sync-api" && output.windows_function_apps["winapi"].name == "fa-upsis-dev-ehs-sync-winapi" && output.flex_consumption_function_apps["flexapi"].name == "fa-upsis-dev-ehs-sync-flexapi"
+    condition     = output.linux_function_apps["api"].name == "fa-example-dev-demo-sync-api" && output.windows_function_apps["winapi"].name == "fa-example-dev-demo-sync-winapi" && output.flex_consumption_function_apps["flexapi"].name == "fa-example-dev-demo-sync-flexapi"
     error_message = "the outputs must show the final name of each app kind"
   }
 }
@@ -409,7 +409,7 @@ run "passing_func_as_an_attribute_restores_the_previous_names" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this["api"].name == "upsis-dev-api-func" && azurerm_windows_function_app.this["winapi"].name == "upsis-dev-winapi-func" && azurerm_function_app_flex_consumption.this["flexapi"].name == "upsis-dev-flexapi-func"
+    condition     = azurerm_linux_function_app.this["api"].name == "example-dev-api-func" && azurerm_windows_function_app.this["winapi"].name == "example-dev-winapi-func" && azurerm_function_app_flex_consumption.this["flexapi"].name == "example-dev-flexapi-func"
     error_message = "attributes = [func] must reproduce the names the previous version generated"
   }
 }
@@ -450,7 +450,7 @@ run "tags_come_from_the_inner_contexts" {
   }
 
   assert {
-    condition     = jsonencode(azurerm_linux_function_app.this["api"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "upsis-dev-api-fa", Namespace = "upsis" }) && jsonencode(azurerm_windows_function_app.this["winapi"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "upsis-dev-winapi-fa", Namespace = "upsis" }) && jsonencode(azurerm_function_app_flex_consumption.this["flexapi"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "upsis-dev-flexapi-fa", Namespace = "upsis" })
+    condition     = jsonencode(azurerm_linux_function_app.this["api"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "example-dev-api-fa", Namespace = "example" }) && jsonencode(azurerm_windows_function_app.this["winapi"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "example-dev-winapi-fa", Namespace = "example" }) && jsonencode(azurerm_function_app_flex_consumption.this["flexapi"].tags) == jsonencode({ Attributes = "fa", Environment = "dev", Name = "example-dev-flexapi-fa", Namespace = "example" })
     error_message = "tags must come from each app inner context, and carry the attributes the caller passes"
   }
 }

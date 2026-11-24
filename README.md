@@ -1,6 +1,60 @@
-# function-app
+# terraform-azurerm-function-app
 
 Creates Azure Function Apps and everything that attaches to them, covering every non-deprecated function-app resource in the AzureRM provider: Linux, Windows and Flex Consumption apps, deployment slots, active-slot swaps, service connections, functions, hybrid connections and Static Web App registrations. Apps are named and tagged through the `null-context` module. Nothing in the module is specific to one hosting plan: pick the resource that matches the plan you use.
+
+Part of the [Raring Group](https://github.com/raringgroup) Terraform module library.
+
+## Usage
+
+```hcl
+module "function_app" {
+  source = "git::https://github.com/raringgroup/terraform-azurerm-function-app.git?ref=v0.1.1"
+
+  context = module.context.self
+
+  label_order = ["namespace", "environment", "name", "attributes"]
+
+  resource_group_name = "<resource-group>"
+  location            = "<azure-region>"
+
+  linux_function_apps = {
+    api = {
+      https_only                 = true
+      service_plan_id            = "<service-plan-id>"
+      storage_account_access_key = "<storage-account-access-key>"
+      storage_account_name       = "<storage-account-name>"
+
+      site_config = {
+        application_stack = {
+          python_version = "3.11"
+        }
+      }
+    }
+  }
+
+  linux_function_app_slots = {
+    staging = {
+      function_app_key           = "api"
+      storage_account_access_key = "<storage-account-access-key>"
+      storage_account_name       = "<storage-account-name>"
+      site_config                = {}
+    }
+  }
+
+  windows_function_apps                     = {}
+  flex_consumption_function_apps            = {}
+  windows_function_app_slots                = {}
+  function_app_active_slots                 = {}
+  function_app_connections                  = {}
+  function_app_functions                    = {}
+  function_app_hybrid_connections           = {}
+  static_web_app_function_app_registrations = {}
+}
+```
+
+Naming and tagging come from [`terraform-null-context`](https://github.com/raringgroup/terraform-null-context). Add `_context.tf` to the calling configuration and pass `context = module.context.self`. The context inputs (`enabled`, `namespace`, `environment`, `label_order`, ...) can also be set directly on the module block; they override the passed context.
+
+See [`examples/`](examples/) for complete, runnable configurations.
 
 ## Requirements
 
@@ -11,7 +65,7 @@ Creates Azure Function Apps and everything that attaches to them, covering every
 
 ## Module Priority
 
-No SevenPico, SevenPicoForks or CloudPosse module exists for Azure Function Apps, so the module uses the `azurerm` function-app resources directly. `_context.tf` declares the root context; it and the child contexts use `git::https://github.com/raringgroup/terraform-null-context.git?ref=v0.1.0`.
+No Raring Group module exists for Azure Function Apps, so the module uses the `azurerm` function-app resources directly. `_context.tf` declares the root context; it and the child contexts use `git::https://github.com/raringgroup/terraform-null-context.git?ref=v0.1.0`.
 
 ## Resources
 
@@ -42,7 +96,7 @@ The module takes these as inputs and does not create them:
 
 ## Naming
 
-The module adds no labels or attributes of its own. An app is named by `null-context` from the context inputs the caller passes (`namespace`, `environment`, `stage`, `project`, `attributes`, ...), joined in the order of `label_order`, with the map key as the `name` label. For `namespace = "upsis"`, `environment = "dev"` and the key `api`, the name is `upsis-dev-api`. Callers add a prefix or suffix through `attributes` and `label_order`: with `project = "ehs-sync"`, `attributes = ["fa"]` and `label_order = ["attributes", "namespace", "environment", "project", "name"]`, the key `api` gives `fa-upsis-dev-ehs-sync-api`. The `name` input of the context is ignored for apps, because the key takes its place. Function app names are 2 to 60 characters: letters, digits and hyphens, and can't start or end with a hyphen. The name is also the default hostname (`<name>.azurewebsites.net`), so it must be globally unique. A key must not appear in more than one app map.
+The module adds no labels or attributes of its own. An app is named by `null-context` from the context inputs the caller passes (`namespace`, `environment`, `stage`, `project`, `attributes`, ...), joined in the order of `label_order`, with the map key as the `name` label. For `namespace = "example"`, `environment = "dev"` and the key `api`, the name is `example-dev-api`. Callers add a prefix or suffix through `attributes` and `label_order`: with `project = "demo-sync"`, `attributes = ["fa"]` and `label_order = ["attributes", "namespace", "environment", "project", "name"]`, the key `api` gives `fa-example-dev-demo-sync-api`. The `name` input of the context is ignored for apps, because the key takes its place. Function app names are 2 to 60 characters: letters, digits and hyphens, and can't start or end with a hyphen. The name is also the default hostname (`<name>.azurewebsites.net`), so it must be globally unique. A key must not appear in more than one app map.
 
 Any app (Linux, Windows or Flex Consumption) can set the optional `name` attribute to use a fixed name instead of the generated one. When `name` is `null` or empty, the generated name applies, so existing callers see no change. The tags always come from the context, so the `Name` tag keeps the generated name even when `name` is set. Changing an app's name replaces the app, so choose it once.
 
@@ -92,64 +146,13 @@ Each output is a map keyed like the matching input, holding the computed attribu
 
 ## Upgrading from v0.1.0 (breaking change)
 
-Version v0.1.0 added the attribute `func` to every generated app name (for example `upsis-dev-api-func`). From v0.1.1 the module adds no attributes, so generated names no longer contain `func`.
+Version v0.1.0 added the attribute `func` to every generated app name (for example `example-dev-api-func`). From v0.1.1 the module adds no attributes, so generated names no longer contain `func`.
 
 **Effect.** A caller that relies on the generated name will see every Linux, Windows and Flex Consumption app renamed. Changing the name of a function app forces a new resource, so Terraform replaces the app (destroy and create): its default hostname changes, and the slots, functions and connections that point at it are replaced with it. Read the plan before applying.
 
 **Keeping the old names.** Pass `func` as the last attribute, for example `attributes = ["func"]` (v0.1.0 appended `func` after the caller attributes, so this reproduces `<context>-<key>-func` for the same `label_order`), or set the optional `name` on an app to its current name.
 
 **Tags.** Tags still come from each app inner context. Without attributes the `Attributes` tag is no longer set on the apps; with `attributes = ["func"]` it stays `func`.
-
-## Usage
-
-```hcl
-terraform {
-  source = "git::https://github.com/raringgroup/terraform-azurerm-function-app.git?ref=v0.1.1"
-}
-
-inputs = {
-  enabled     = true
-  namespace   = "<namespace>"
-  environment = "<environment>"
-  label_order = ["namespace", "environment", "name", "attributes"]
-
-  resource_group_name = "<resource-group>"
-  location            = "<azure-region>"
-
-  linux_function_apps = {
-    api = {
-      https_only                 = true
-      service_plan_id            = "<service-plan-id>"
-      storage_account_access_key = "<storage-account-access-key>"
-      storage_account_name       = "<storage-account-name>"
-
-      site_config = {
-        application_stack = {
-          python_version = "3.11"
-        }
-      }
-    }
-  }
-
-  linux_function_app_slots = {
-    staging = {
-      function_app_key           = "api"
-      storage_account_access_key = "<storage-account-access-key>"
-      storage_account_name       = "<storage-account-name>"
-      site_config                = {}
-    }
-  }
-
-  windows_function_apps                     = {}
-  flex_consumption_function_apps            = {}
-  windows_function_app_slots                = {}
-  function_app_active_slots                 = {}
-  function_app_connections                  = {}
-  function_app_functions                    = {}
-  function_app_hybrid_connections           = {}
-  static_web_app_function_app_registrations = {}
-}
-```
 
 ## Examples
 
@@ -163,8 +166,16 @@ Each example is self-contained: it creates its own resource group, storage accou
 | [`flex-consumption`](examples/flex-consumption) | A Flex Consumption app (FC1) with always-ready instances, a deployment container and a managed identity. |
 | [`existing-function-app`](examples/existing-function-app) | Adds a slot and a function to a function app that already exists, referring to it by `function_app_id` instead of by key. |
 
+## Versioning
+
+Releases follow semantic versioning and are tagged `vX.Y.Z`. Pin `?ref=` to a tag.
+
+## Contributing
+
+Work happens on `develop` through feature branches and pull requests. See the Raring Group gitflow standards.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-`_context.tf` is derived from Cloud Posse's [terraform-null-label](https://github.com/cloudposse/terraform-null-label).
+Derived from [cloudposse/terraform-null-label](https://github.com/cloudposse/terraform-null-label) (`_context.tf`), Copyright 2017-2020 Cloud Posse, LLC, under Apache-2.0.
