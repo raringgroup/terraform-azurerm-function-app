@@ -27,14 +27,14 @@
 ## ----------------------------------------------------------------------------
 
 #
-# ONLY EDIT THIS FILE IN github.com/SevenPico/terraform-null-context
+# ONLY EDIT THIS FILE IN github.com/raringgroup/terraform-null-context
 # All other instances of this file should be a copy of that one
 #
 #
 # Copy this file from https://github.com/cloudposse/terraform-null-label/blob/master/exports/context.tf
 # and then place it in your Terraform module to automatically get
-# Cloud Posse's standard configuration inputs suitable for passing
-# to Cloud Posse modules.
+# Raring Group's standard configuration inputs suitable for passing
+# to Raring Group modules.
 #
 # curl -sL https://raw.githubusercontent.com/cloudposse/terraform-null-label/master/exports/context.tf -o context.tf
 #
@@ -49,7 +49,7 @@
 #
 
 module "context" {
-  # Modified from upstream: uses the Raring Group fork instead of the SevenPico registry module.
+  # Modified from upstream: uses the Raring Group context module instead of the upstream registry module.
   source = "git::https://github.com/raringgroup/terraform-null-context.git?ref=v0.1.0"
 
   enabled             = var.enabled
